@@ -19,6 +19,7 @@ HIPCHAT_ROOM = 'PokemonGo'
 LOCALE = 'fr'
 MAX_DISTANCE = 70 #meters
 CACHE_FILE = os.path.join(dir, 'cache.json') #to store previous run
+POKEMON_IDS_TO_FILTER = [13, 16, 19, 21, 41]
 
 
 # Loading Pokemons names
@@ -62,7 +63,7 @@ def notif_hipchat_new_pokemon(pokemon):
       'room_id': HIPCHAT_ROOM,
       'from': 'Pokevision',
       'color': 'purple',
-      'notify': '0',
+      'notify': '1',
       'message_format': 'text',
       'message': 'New pokemon available: %s (%i meters) for %i seconds' % (name, distance, seconds)
     }
@@ -90,8 +91,9 @@ cache_coordinates = set((p['latitude'], p['longitude']) for p in cache) #because
 for pokemon in nearest_pokemons:
     if (pokemon['latitude'], pokemon['longitude']) not in cache_coordinates:
     #if pokemon['id'] not in cache:
-        print "New pokemon: %s" % json.dumps(pokemon)
-        notif_hipchat_new_pokemon(pokemon)
+        if pokemon['pokemonId'] not in POKEMON_IDS_TO_FILTER:
+            print "New pokemon: %s" % json.dumps(pokemon)
+            notif_hipchat_new_pokemon(pokemon)
 
 # Write json cache
 cache = nearest_pokemons
