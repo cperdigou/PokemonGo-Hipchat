@@ -17,7 +17,7 @@ LONGITUDE = 2.3472812
 HIPCHAT_API_KEY = 'xxxxxxxx'
 HIPCHAT_ROOM = 'PokemonGo'
 LOCALE = 'fr'
-MAX_DISTANCE = 50 #meters
+MAX_DISTANCE = 70 #meters
 CACHE_FILE = os.path.join(dir, 'cache.json') #to store previous run
 
 
@@ -86,16 +86,16 @@ else:
     cache = []
 
 # Test if new pokemon available
-#cache_coordinates = set((p['latitude'], p['longitude']) for p in cache)
+cache_coordinates = set((p['latitude'], p['longitude']) for p in cache) #because the pokemon['id'] seems not to be really stable, we test against coordinates
 for pokemon in nearest_pokemons:
-    #if (pokemon['latitude'], pokemon['longitude']) not in cache_coordinates:
-    if pokemon['id'] not in cache:
+    if (pokemon['latitude'], pokemon['longitude']) not in cache_coordinates:
+    #if pokemon['id'] not in cache:
         print "New pokemon: %s" % json.dumps(pokemon)
         notif_hipchat_new_pokemon(pokemon)
 
 # Write json cache
-#cache = nearest_pokemons
-cache = [pokemon['id'] for pokemon in nearest_pokemons]
+cache = nearest_pokemons
+#cache = [pokemon['id'] for pokemon in nearest_pokemons]
 with open(CACHE_FILE, 'w') as f:
     json.dump(cache, f)
     f.close()
