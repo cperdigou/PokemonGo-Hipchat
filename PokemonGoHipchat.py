@@ -8,6 +8,8 @@ import json
 import os
 import time
 
+dir = os.path.abspath(os.path.dirname(__file__))
+
 # Variables
 
 LATITUDE = 48.8708161
@@ -16,10 +18,11 @@ HIPCHAT_API_KEY = 'xxxxxxxx'
 HIPCHAT_ROOM = 'PokemonGo'
 LOCALE = 'fr'
 MAX_DISTANCE = 50 #meters
-CACHE_FILE = 'cache.json' #to store previous run
+CACHE_FILE = os.path.join(dir, 'cache.json') #to store previous run
+
 
 # Loading Pokemons names
-pokemonsJSON = json.load(codecs.open('locales/pokemon.' + LOCALE + '.json', 'r', 'UTF-8'))
+pokemonsJSON = json.load(codecs.open(os.path.join(dir,'locales/pokemon.' + LOCALE + '.json'), 'r', 'UTF-8'))
 
 
 # Helper functions
