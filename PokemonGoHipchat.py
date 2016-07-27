@@ -12,8 +12,15 @@ dir = os.path.abspath(os.path.dirname(__file__))
 
 # Variables
 
-LATITUDE = 48.8708161
-LONGITUDE = 2.3472812
+LATITUDE = 48.8709640
+LONGITUDE = 2.34769463
+LOCATIONS_NAMES = ["my room", "backyard", "your room"]
+LOCATIONS_LAT_LONG = [[LATITUDE, LONGITUDE], [48.8712922, 2.3477321], [48.8710593, 2.3469972]]
+if len(LOCATIONS_NAMES) != len(LOCATIONS_LAT_LONG):
+    print 'You need to give names and lat/long for all locations'
+    exit()
+
+
 HIPCHAT_API_KEY = 'xxxxxxxx'
 HIPCHAT_ROOM = 'PokemonGo'
 LOCALE = 'fr'
@@ -28,7 +35,7 @@ pokemonsJSON = json.load(codecs.open(os.path.join(dir,'locales/pokemon.' + LOCAL
 
 # Helper functions
 
-def lonlat_to_meters(lat1, lon1, lat2, lon2):  
+def lonlat_to_meters(lat1, lon1, lat2, lon2):
     """
     Calculate the great circle distance between two points
     on the earth (specified in decimal degrees)
@@ -56,8 +63,22 @@ def get_latest_pokemons(LATITUDE, LONGITUDE):
 
 def notif_hipchat_new_pokemon(pokemon):
     name = pokemonsJSON.get(str(pokemon['pokemonId']), 'Unknown')
-    distance = int(lonlat_to_meters(LATITUDE, LONGITUDE, pokemon['latitude'], pokemon['longitude']))
+
+    distances = []
+    distances.append(int(lonlat_to_meters(LATITUDE, LONGITUDE, pokemon['latitude'], pokemon['longitude'])))
+    for location in LOCATIONS_LAT_LONG:
+        distances.append(int(lonlat_to_meters(location[0], location[1], pokemon['latitude'], pokemon['longitude'])))
+
     seconds = pokemon['expiration_time'] - time.time()
+
+    message = 'New pokemon available: %s' % (name)
+    for location_idx in range(len(LOCATIONS_NAMES)):
+        message = message + '(%i meters from %s) ' % (distances[location_idx], LOCATIONS_NAMES[location_idx])
+
+    message = message + 'for %i seconds' % (seconds)
+
+    print message
+
     params = {
       'auth_token': HIPCHAT_API_KEY,
       'room_id': HIPCHAT_ROOM,
@@ -65,7 +86,7 @@ def notif_hipchat_new_pokemon(pokemon):
       'color': 'purple',
       'notify': '1',
       'message_format': 'text',
-      'message': 'New pokemon available: %s (%i meters) for %i seconds' % (name, distance, seconds)
+      'message': message
     }
     #print params
     r = requests.get("https://api.hipchat.com/v1/rooms/message", params=params)
@@ -91,9 +112,9 @@ cache_coordinates = set((p['latitude'], p['longitude']) for p in cache) #because
 for pokemon in nearest_pokemons:
     if (pokemon['latitude'], pokemon['longitude']) not in cache_coordinates:
     #if pokemon['id'] not in cache:
-        if pokemon['pokemonId'] not in POKEMON_IDS_TO_FILTER:
-            print "New pokemon: %s" % json.dumps(pokemon)
-            notif_hipchat_new_pokemon(pokemon)
+        #if pokemon['pokemonId'] not in POKEMON_IDS_TO_FILTER:
+        print "New pokemon: %s" % json.dumps(pokemon)
+        notif_hipchat_new_pokemon(pokemon)
 
 # Write json cache
 cache = nearest_pokemons
