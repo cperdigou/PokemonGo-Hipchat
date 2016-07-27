@@ -24,7 +24,7 @@ if len(LOCATIONS_NAMES) != len(LOCATIONS_LAT_LONG):
 HIPCHAT_API_KEY = 'xxxxxxxx'
 HIPCHAT_ROOM = 'PokemonGo'
 LOCALE = 'fr'
-MAX_DISTANCE = 700 #meters
+MAX_DISTANCE = 70 #meters
 CACHE_FILE = os.path.join(dir, 'cache.json') #to store previous run
 POKEMON_IDS_TO_FILTER = [13, 16, 19, 21, 41]
 
