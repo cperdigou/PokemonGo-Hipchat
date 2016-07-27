@@ -24,7 +24,7 @@ if len(LOCATIONS_NAMES) != len(LOCATIONS_LAT_LONG):
 HIPCHAT_API_KEY = 'xxxxxxxx'
 HIPCHAT_ROOM = 'PokemonGo'
 LOCALE = 'fr'
-MAX_DISTANCE = 70 #meters
+MAX_DISTANCE = 700 #meters
 CACHE_FILE = os.path.join(dir, 'cache.json') #to store previous run
 POKEMON_IDS_TO_FILTER = [13, 16, 19, 21, 41]
 
@@ -75,7 +75,7 @@ def notif_hipchat_new_pokemon(pokemon):
     for location_idx in range(len(LOCATIONS_NAMES)):
         message = message + '(%i meters from %s) ' % (distances[location_idx], LOCATIONS_NAMES[location_idx])
 
-    message = message + 'for %i seconds' % (seconds)
+    message = message + 'will be gone at %s' % (time.strftime("%H:%M", time.localtime(pokemon['expiration_time'])))
 
     print message
 
