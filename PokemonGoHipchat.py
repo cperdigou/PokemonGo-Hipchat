@@ -73,7 +73,7 @@ def notif_hipchat_new_pokemon(pokemon):
 
     message = 'New pokemon available: %s' % (name)
     for location_idx in range(len(LOCATIONS_NAMES)):
-        message = message + '(%i meters from %s) ' % (distances[location_idx], LOCATIONS_NAMES[location_idx])
+        message = message + ' (%i meters from %s) ' % (distances[location_idx], LOCATIONS_NAMES[location_idx])
 
     message = message + 'will be gone at %s' % (time.strftime("%H:%M", time.localtime(pokemon['expiration_time'])))
 
