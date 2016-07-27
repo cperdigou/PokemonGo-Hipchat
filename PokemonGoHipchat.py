@@ -31,6 +31,9 @@ LOCALE = 'fr'
 CACHE_FILE = os.path.join(dir, 'cache.json')
 # to hide useless pokemons
 POKEMON_IDS_TO_FILTER = [13, 16, 19, 21, 41]
+WORTH_GOING_OUT = [3,6,9,26,28,31,34,36,57,59,91,94,95,101,112,114,115,128,139,141]
+STOP_EVERYTHING_YOURE_DOING = [83,89,105,106,107,108,113,122,123,130,132,137,142,143,144,145,146,149,150,151]
+
 
 
 # Loading Pokemons names
@@ -65,7 +68,7 @@ def get_latest_pokemons(LATITUDE, LONGITUDE):
     else:
         raise IOError('API error when calling (status code %s):\n%s' % (r.status_code, r.text))
 
-def notif_hipchat_new_pokemon(pokemon):
+def notif_hipchat_new_pokemon(pokemon, criticity=1):
     name = pokemonsJSON.get(str(pokemon['pokemonId']), 'Unknown')
 
     distances = []
@@ -78,7 +81,12 @@ def notif_hipchat_new_pokemon(pokemon):
 
     seconds = pokemon['expiration_time'] - time.time()
 
-    message = 'New pokemon available: %s (%s) for %i:%i' % (name, ', '.join(distances), seconds // 60, seconds % 60)
+    if criticity == 1:
+        message = 'New pokemon available: %s (%s) for %i:%i' % (name, ', '.join(distances), seconds // 60, seconds % 60)
+    elif criticity == 2:
+        message = 'You should consider going out for this one: %s (%s) for %i:%i' % (name, ', '.join(distances), seconds // 60, seconds % 60)
+    elif criticity == 3:
+        message = 'You know what? RUN AND GO GET THIS ONE: %s (%s) for %i:%i' % (name, ', '.join(distances), seconds // 60, seconds % 60)
 
     params = {
       'auth_token': HIPCHAT_API_KEY,
@@ -97,6 +105,8 @@ def notif_hipchat_new_pokemon(pokemon):
 pokemons = get_latest_pokemons(LATITUDE, LONGITUDE)
 
 nearest_pokemons = [pokemon for pokemon in pokemons if lonlat_to_meters(LATITUDE, LONGITUDE, pokemon['latitude'], pokemon['longitude']) <= MAX_DISTANCE]
+go_out_pokemons = [pokemon for pokemon in pokemons if pokemon['id'] in WORTH_GOING_OUT]
+stop_everything_pokemons = [pokemon for pokemon in pokemons if pokemon['id'] in STOP_EVERYTHING_YOURE_DOING]
 
 print nearest_pokemons
 
@@ -110,6 +120,19 @@ else:
 
 # Test if new pokemon available
 cache_coordinates = set((p['latitude'], p['longitude']) for p in cache) #because the pokemon['id'] seems not to be really stable, we test against coordinates
+
+for pokemon in stop_everything_pokemons:
+    if (pokemon['latitude'], pokemon['longitude']) not in cache_coordinates:
+    #if pokemon['id'] not in cache:
+        print "New pokemon: %s" % json.dumps(pokemon)
+        notif_hipchat_new_pokemon(pokemon, 3)
+
+for pokemon in go_out_pokemons:
+    if (pokemon['latitude'], pokemon['longitude']) not in cache_coordinates:
+    #if pokemon['id'] not in cache:
+        print "New pokemon: %s" % json.dumps(pokemon)
+        notif_hipchat_new_pokemon(pokemon, 2)
+
 for pokemon in nearest_pokemons:
     if (pokemon['latitude'], pokemon['longitude']) not in cache_coordinates:
     #if pokemon['id'] not in cache:
