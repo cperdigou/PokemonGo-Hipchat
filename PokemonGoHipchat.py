@@ -12,20 +12,24 @@ dir = os.path.abspath(os.path.dirname(__file__))
 
 # Variables
 
+# geographic area restriction for notification
 LATITUDE = 48.8709640
 LONGITUDE = 2.34769463
-LOCATIONS_NAMES = ["my room", "backyard", "your room"]
-LOCATIONS_LAT_LONG = [[LATITUDE, LONGITUDE], [48.8712922, 2.3477321], [48.8710593, 2.3469972]]
-if len(LOCATIONS_NAMES) != len(LOCATIONS_LAT_LONG):
-    print 'You need to give names and lat/long for all locations'
-    exit()
-
-
+MAX_DISTANCE = 70 #meters
+# location(s) from which we want to calculate the distance
+LOCATIONS = [
+    {'main': [LATITUDE, LONGITUDE]},
+    {'my room': [48.8712922, 2.3477321]},
+    {'my kitchen': [48.8710593, 2.3469972]}
+]
+# hipchat
 HIPCHAT_API_KEY = 'xxxxxxxx'
 HIPCHAT_ROOM = 'PokemonGo'
+# locale for pokemons name
 LOCALE = 'fr'
-MAX_DISTANCE = 70 #meters
-CACHE_FILE = os.path.join(dir, 'cache.json') #to store previous run
+# cache file
+CACHE_FILE = os.path.join(dir, 'cache.json')
+# to hide useless pokemons
 POKEMON_IDS_TO_FILTER = [13, 16, 19, 21, 41]
 
 
@@ -65,19 +69,16 @@ def notif_hipchat_new_pokemon(pokemon):
     name = pokemonsJSON.get(str(pokemon['pokemonId']), 'Unknown')
 
     distances = []
-    distances.append(int(lonlat_to_meters(LATITUDE, LONGITUDE, pokemon['latitude'], pokemon['longitude'])))
-    for location in LOCATIONS_LAT_LONG:
-        distances.append(int(lonlat_to_meters(location[0], location[1], pokemon['latitude'], pokemon['longitude'])))
+    for item in LOCATIONS:
+        for location, coordinates in item.items():
+            distances.append('%i meters from %s' % (
+                    int(lonlat_to_meters(coordinates[0], coordinates[1], pokemon['latitude'], pokemon['longitude'])),
+                    location
+                ))
 
     seconds = pokemon['expiration_time'] - time.time()
 
-    message = 'New pokemon available: %s' % (name)
-    for location_idx in range(len(LOCATIONS_NAMES)):
-        message = message + ' (%i meters from %s) ' % (distances[location_idx], LOCATIONS_NAMES[location_idx])
-
-    message = message + 'will be gone at %s' % (time.strftime("%H:%M", time.localtime(pokemon['expiration_time'])))
-
-    print message
+    message = 'New pokemon available: %s (%s) for %i:%i' % (name, ', '.join(distances), seconds // 60, seconds % 60)
 
     params = {
       'auth_token': HIPCHAT_API_KEY,
@@ -112,9 +113,9 @@ cache_coordinates = set((p['latitude'], p['longitude']) for p in cache) #because
 for pokemon in nearest_pokemons:
     if (pokemon['latitude'], pokemon['longitude']) not in cache_coordinates:
     #if pokemon['id'] not in cache:
-        #if pokemon['pokemonId'] not in POKEMON_IDS_TO_FILTER:
-        print "New pokemon: %s" % json.dumps(pokemon)
-        notif_hipchat_new_pokemon(pokemon)
+        if pokemon['pokemonId'] not in POKEMON_IDS_TO_FILTER:
+            #print "New pokemon: %s" % json.dumps(pokemon)
+            notif_hipchat_new_pokemon(pokemon)
 
 # Write json cache
 cache = nearest_pokemons
